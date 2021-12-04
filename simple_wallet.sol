@@ -33,16 +33,13 @@ contract SimpleWallet is Ownable {
     function transferETH(uint256 _amount, address payable _to)
         public
         onlyOwner
-        returns (bool)
     {
         require(_amount + fee <= balance());
 
         (bool success, ) = _to.transfer(_amount);
-        if (success) {
-            feeOwner.transfer(fee);
-            emit TransferETH(msg.sender, _to, _amount);
-        }
-        return success;
+        require(success);
+        feeOwner.transfer(fee);
+        emit TransferETH(msg.sender, _to, _amount);
     }
 
     // Additional Fee
@@ -63,15 +60,12 @@ contract SimpleWallet is Ownable {
         IERC20 _token,
         uint256 _amount,
         address payable _to
-    ) public onllyOwner returns (bool) {
+    ) public onllyOwner {
         uint256 erc20Balance = _token.balanceOf(address(this));
         require(_amount <= erc20Balance);
 
-        bool success = token.transferFrom(msg.sender, _to, _amount);
-        if (success) {
-            emit TransferERC20(msg.sender, _to, _amount);
-        }
-        return success;
+        require(token.transferFrom(msg.sender, _to, _amount));
+        emit TransferERC20(msg.sender, _to, _amount);
     }
 
     // Receiving the allowence amount of the wallet owner
@@ -88,12 +82,7 @@ contract SimpleWallet is Ownable {
     function allowanceERC20Set(IERC20 _token, uint256 _amount)
         external
         onlyOwner
-        returns (bool)
     {
-        bool success = _token.approve(msg.sender, _amount);
-        if (success) {
-            emit FeeETHChanged(msg.sender, _amount);
-        }
-        return success;
+        require(_token.approve(msg.sender, _amount));
     }
 }
